@@ -136,12 +136,11 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\RedisSessionStateProvider_net462\RedisSessionStateProvider_net462.csproj">
-      <Project>{f156bc3a-863b-4efa-925a-8851464f0102}</Project>
-      <Name>RedisSessionStateProvider_net462</Name>
+    <ProjectReference Include="..\..\src\RedisSessionStateProvider\RedisSessionStateProvider.csproj">
+      <Project>{9600fa19-b166-48d8-a674-485f2ec86571}</Project>
+      <Name>RedisSessionStateProvider</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\..\build\FunctionalTests.PostProcessing.targets" />
   <PropertyGroup Condition="'$(TargetFrameworkVersion)' == 'v4.6.2'">
     <DefineConstants>$(DefineConstants);DOTNET_462</DefineConstants>
   </PropertyGroup>

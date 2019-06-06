@@ -1,0 +1,10 @@
+﻿<Project>
+  <PropertyGroup>
+    <Authors>Oriflame Software</Authors>
+    <Company>Oriflame Software</Company>
+    <Copyright>© Oriflame Software</Copyright>
+    <RepositoryUrl>https://github.com/Oriflame/aspnet-redis-providers</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/Oriflame/aspnet-redis-providers</PackageProjectUrl>
+  </PropertyGroup>
+</Project>

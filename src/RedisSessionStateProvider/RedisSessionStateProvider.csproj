@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>Oriflame.Web.RedisSessionStateProvider</AssemblyName>
+    <RootNamespace>Microsoft.Web.Redis</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageTags>session sessionstateprovider azure redis</PackageTags>
+    <Description>Custom session state provider for redis cache</Description>
+  </PropertyGroup>
+  <ItemGroup>
+      <Reference Include="System.Web" />
+      <Reference Include="System.Configuration" />
+      <PackageReference Include="Microsoft.AspNet.SessionState.SessionStateModule" Version="1.1.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.519" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="web.config.transform" copyToOutput="false">
+      <IncludeInPackage>true</IncludeInPackage>
+      <CopyToOutput>false</CopyToOutput>
+      <BuildAction>None</BuildAction>
+      <copyToOutput>false</copyToOutput>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>
