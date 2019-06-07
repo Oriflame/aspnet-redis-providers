@@ -10,8 +10,8 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly: InternalsVisibleTo("Microsoft.Web.RedisSessionStateProvider.Unit.Tests_net462")]
-[assembly: InternalsVisibleTo("Microsoft.Web.RedisSessionStateProvider.Functional.Tests_net462")]
+[assembly: InternalsVisibleTo("Microsoft.Web.RedisSessionStateProvider.Unit.Tests")]
+[assembly: InternalsVisibleTo("Microsoft.Web.RedisSessionStateProvider.Functional.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
