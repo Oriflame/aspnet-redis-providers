@@ -22,7 +22,7 @@ namespace Microsoft.Web.Redis.Tests
         [Fact]
         public void Initialize_WithNullConfig()
         {
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             Assert.Throws<ArgumentNullException>(() => sessionStateStore.Initialize(null, null));
         }
 
@@ -31,7 +31,7 @@ namespace Microsoft.Web.Redis.Tests
         {
             Utility.SetConfigUtilityToDefault();
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.sessionId = "session-id";
             sessionStateStore.sessionLockId = "session-lock-id";
             sessionStateStore.cache = mockCache;
@@ -44,7 +44,7 @@ namespace Microsoft.Web.Redis.Tests
         {
             Utility.SetConfigUtilityToDefault();
             SessionStateStoreData sssd = new SessionStateStoreData(Utility.GetChangeTrackingSessionStateItemCollection(), null, 900);
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             Assert.Equal(true, Utility.CompareSessionStateStoreData(sessionStateStore.CreateNewStoreData(null, 900),sssd));
         }
 
@@ -54,7 +54,7 @@ namespace Microsoft.Web.Redis.Tests
             Utility.SetConfigUtilityToDefault(); 
             string id = "session-id"; 
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.CreateUninitializedItemAsync(null, id, 15, CancellationToken.None);
             A.CallTo(() => mockCache.Set(A<ISessionStateItemCollection>.That.Matches(
@@ -78,7 +78,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             A.CallTo(() => mockCache.TryCheckWriteLockAndGetData(out mockLockId, out sessionData, out sessionTimeout)).Returns(true); 
             
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
 
             SessionStateStoreData sessionStateStoreData = null;
@@ -114,7 +114,7 @@ namespace Microsoft.Web.Redis.Tests
             A.CallTo(() => mockCache.TryCheckWriteLockAndGetData(out mockLockId, out sessionData, out sessionTimeout)).Returns(false);
             A.CallTo(() => mockCache.GetLockAge(A<object>.Ignored)).Returns(TimeSpan.Zero);
 
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             SessionStateStoreData sessionStateStoreData;
 
@@ -156,7 +156,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             A.CallTo(() => mockCache.TryCheckWriteLockAndGetData(out mockLockId, out mockSessionData, out mockSessionTimeout)).Returns(true).AssignsOutAndRefParameters(0, sessionData, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes);
 
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             SessionStateStoreData sessionStateStoreData;
 
@@ -192,7 +192,7 @@ namespace Microsoft.Web.Redis.Tests
             A.CallTo(() => mockCache.GetLockAge(A<object>.Ignored)).Returns(TimeSpan.Zero);
 
 
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             SessionStateStoreData sessionStateStoreData;
 
@@ -234,7 +234,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             A.CallTo(() => mockCache.TryTakeWriteLockAndGetData(A<DateTime>.Ignored, 90, out mockLockId, out mockSessionData, out mockSessionTimeout)).Returns(true).AssignsOutAndRefParameters(0, sessionData, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes);
             
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             SessionStateStoreData sessionStateStoreData;
 
@@ -260,7 +260,7 @@ namespace Microsoft.Web.Redis.Tests
             string id = "session-id";
             var mockCache = A.Fake<ICacheConnection>();
             
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.ResetItemTimeoutAsync(null, id, CancellationToken.None);
             A.CallTo(() => mockCache.UpdateExpiryTime(900)).MustHaveHappened();
@@ -272,7 +272,7 @@ namespace Microsoft.Web.Redis.Tests
             Utility.SetConfigUtilityToDefault();
             string id = "session-id";
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.RemoveItemAsync(null, id, "lockId", null, CancellationToken.None);
             A.CallTo(() => mockCache.TryRemoveAndReleaseLock(A<object>.Ignored)).MustHaveHappened();
@@ -284,7 +284,7 @@ namespace Microsoft.Web.Redis.Tests
             Utility.SetConfigUtilityToDefault(); 
             string id = "session-id";
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.ReleaseItemExclusiveAsync(null, id, "lockId", CancellationToken.None);
             A.CallTo(() => mockCache.TryReleaseLockIfLockIdMatch(A<object>.Ignored, A<int>.Ignored)).MustHaveHappened();
@@ -298,7 +298,7 @@ namespace Microsoft.Web.Redis.Tests
             SessionStateStoreData sssd = new SessionStateStoreData(null, null, 15);
 
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, null, true, CancellationToken.None);
             A.CallTo(() => mockCache.Set(A<ISessionStateItemCollection>.That.Matches(o => o.Count == 0), 900)).MustHaveHappened();
@@ -314,7 +314,7 @@ namespace Microsoft.Web.Redis.Tests
             SessionStateStoreData sssd = new SessionStateStoreData(sessionStateItemCollection, null, 15);
 
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, null, true, CancellationToken.None);
             A.CallTo(() => mockCache.Set(A<ISessionStateItemCollection>.That.Matches(
@@ -330,7 +330,7 @@ namespace Microsoft.Web.Redis.Tests
             SessionStateStoreData sssd = new SessionStateStoreData(null, null, 900);
 
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, 7, false, CancellationToken.None);
             A.CallTo(() => mockCache.TryUpdateAndReleaseLock(A<object>.Ignored, A<ISessionStateItemCollection>.Ignored, 900)).MustNotHaveHappened();
@@ -347,7 +347,7 @@ namespace Microsoft.Web.Redis.Tests
             SessionStateStoreData sssd = new SessionStateStoreData(sessionStateItemCollection, null, 15);
 
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, 7, false, CancellationToken.None);
             A.CallTo(() => mockCache.TryUpdateAndReleaseLock(A<object>.Ignored, 
@@ -364,7 +364,7 @@ namespace Microsoft.Web.Redis.Tests
             SessionStateStoreData sssd = new SessionStateStoreData(sessionStateItemCollection, null, 15);
 
             var mockCache = A.Fake<ICacheConnection>();
-            RedisSessionStateProvider sessionStateStore = new RedisSessionStateProvider();
+            RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, 7, false, CancellationToken.None);
             A.CallTo(() => mockCache.TryUpdateAndReleaseLock(A<object>.Ignored, 
