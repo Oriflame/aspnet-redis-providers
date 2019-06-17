@@ -10,7 +10,7 @@ namespace Oriflame.Web.Redis
     public interface ISessionVersionProvider
     {
         void SetVersion(ISessionStateItemCollection sessionData);
-        Task<GetItemResult> SanitizeSessionByVersion(HttpContextBase context, string id, GetItemResult result, CancellationToken cancellationToken);
+        Task<GetItemResult> SanitizeSessionByVersion(HttpContextBase context, string id, GetItemResult result, bool isResultExclusivelyLocked, CancellationToken cancellationToken);
         void Initialize(SessionStateStoreProviderAsyncBase sessionStateStoreProvider, NameValueCollection config);
     }
 }

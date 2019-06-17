@@ -22,7 +22,7 @@ namespace Oriflame.Web.Redis
             {
             }
 
-            public Task<GetItemResult> SanitizeSessionByVersion(HttpContextBase context, string id, GetItemResult result, CancellationToken cancellationToken)
+            public Task<GetItemResult> SanitizeSessionByVersion(HttpContextBase context, string id, GetItemResult result, bool isResultExclusivelyLocked, CancellationToken cancellationToken)
             {
                 return Task.FromResult(result);
             }
@@ -52,52 +52,13 @@ namespace Oriflame.Web.Redis
         public override async Task<GetItemResult> GetItemAsync(HttpContextBase context, string id, CancellationToken cancellationToken)
         {
             var result = await base.GetItemAsync(context, id, cancellationToken);
-
-            result = await SanitizeSessionByVersion(context, id, result, cancellationToken).ConfigureAwait(false);
-
-            return result;
-        }
-
-        public override bool SetItemExpireCallback(SessionStateItemExpireCallback expireCallback)
-        {
-            return base.SetItemExpireCallback(expireCallback);
-        }
-
-        public override SessionStateStoreData CreateNewStoreData(HttpContextBase context, int timeout)
-        {
-            return base.CreateNewStoreData(context, timeout);
-        }
-
-        public override Task CreateUninitializedItemAsync(HttpContextBase context, string id, int timeout, CancellationToken cancellationToken)
-        {
-            return base.CreateUninitializedItemAsync(context, id, timeout, cancellationToken);
-        }
-
-        public override Task EndRequestAsync(HttpContextBase context)
-        {
-            return base.EndRequestAsync(context);
+            return await SanitizeSessionByVersion(context, id, result, false, cancellationToken).ConfigureAwait(false);
         }
 
         public override async Task<GetItemResult> GetItemExclusiveAsync(HttpContextBase context, string id, CancellationToken cancellationToken)
         {
             var result = await base.GetItemExclusiveAsync(context, id, cancellationToken).ConfigureAwait(false);
-
-            return await SanitizeSessionByVersion(context, id, result, cancellationToken).ConfigureAwait(false);
-        }
-
-        public override Task ReleaseItemExclusiveAsync(HttpContextBase context, string id, object lockId, CancellationToken cancellationToken)
-        {
-            return base.ReleaseItemExclusiveAsync(context, id, lockId, cancellationToken);
-        }
-
-        public override Task RemoveItemAsync(HttpContextBase context, string id, object lockId, SessionStateStoreData item, CancellationToken cancellationToken)
-        {
-            return base.RemoveItemAsync(context, id, lockId, item, cancellationToken);
-        }
-
-        public override Task ResetItemTimeoutAsync(HttpContextBase context, string id, CancellationToken cancellationToken)
-        {
-            return base.ResetItemTimeoutAsync(context, id, cancellationToken);
+            return await SanitizeSessionByVersion(context, id, result, true, cancellationToken).ConfigureAwait(false);
         }
 
         public override Task SetAndReleaseItemExclusiveAsync(HttpContextBase context, string id, SessionStateStoreData item, object lockId, bool newItem, CancellationToken cancellationToken)
@@ -112,9 +73,14 @@ namespace Oriflame.Web.Redis
             base.OnCreateUninitializedItemAsync(sessionData);
         }
 
-        private Task<GetItemResult> SanitizeSessionByVersion(HttpContextBase context, string id, GetItemResult result, CancellationToken cancellationToken)
+        private Task<GetItemResult> SanitizeSessionByVersion(
+            HttpContextBase context,
+            string id,
+            GetItemResult result,
+            bool isResultExclusivelyLocked,
+            CancellationToken cancellationToken)
         {
-            return versionProvider.SanitizeSessionByVersion(context, id, result, cancellationToken);
+            return versionProvider.SanitizeSessionByVersion(context, id, result, isResultExclusivelyLocked, cancellationToken);
         }
 
         private void SetVersion(ISessionStateItemCollection sessionData)

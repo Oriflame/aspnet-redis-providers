@@ -10,37 +10,65 @@ namespace Oriflame.Web.Redis
 {
     public class SessionVersionFromApplicationProvider : ISessionVersionProvider
     {
-        private SessionStateStoreProviderAsyncBase sessionStateStoreProvider;
         public const string SessionVersionKey = nameof(SessionVersionFromApplicationProvider) + ".Version";
         public const string VersionConfigAttributeName = "version";
 
-        private static string _applicationVersion;
+        private static string applicationVersion;
+        private SessionStateStoreProviderAsyncBase sessionStateStoreProvider;
 
         public void SetVersion(ISessionStateItemCollection sessionData)
         {
-            sessionData[SessionVersionKey] = _applicationVersion;
+            sessionData[SessionVersionKey] = applicationVersion;
         }
 
-        public Task<GetItemResult> SanitizeSessionByVersion(
+        public async Task<GetItemResult> SanitizeSessionByVersion(
             HttpContextBase context,
             string id,
             GetItemResult result,
+            bool isResultExclusivelyLocked,
             CancellationToken cancellationToken)
         {
-            var sessionVersion = result.Item?.Items[SessionVersionKey] as string;
-            if (_applicationVersion == sessionVersion)
+            var sessionData = result.Item?.Items;
+            if (sessionData == null)
             {
-                return Task.FromResult(result);
+                return result;
             }
 
-            // TODO remove from Redis now of wait for request end?
-            //await sessionStateStoreProvider.RemoveItemAsync(context, id, result.LockId, result.Item, cancellationToken); // TODO lockId always initialized?
+            if (IsSessionVersionValid(sessionData))
+            {
+                return result;
+            }
 
-            result.Item?.Items.Clear();
-            return Task.FromResult(result);
+            if (!isResultExclusivelyLocked)
+            {
+                var result2 = await sessionStateStoreProvider.GetItemExclusiveAsync(context, id, cancellationToken)
+                    .ConfigureAwait(false);
+                if (result2.Locked) // TODO verify consequences in code review
+                {
+                    return result;
+                }
+
+                result = result2;
+                sessionData = result2.Item.Items;
+            }
+
+            sessionData.Clear();
+            await sessionStateStoreProvider.SetAndReleaseItemExclusiveAsync(context, id, result.Item, result.LockId, false, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (isResultExclusivelyLocked)
+            {
+                return await sessionStateStoreProvider.GetItemExclusiveAsync(context, id, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                return await sessionStateStoreProvider.GetItemAsync(context, id, cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
 
-        public void Initialize(SessionStateStoreProviderAsyncBase sessionStateStoreProvider, NameValueCollection config)
+        public virtual void Initialize(SessionStateStoreProviderAsyncBase sessionStateStoreProvider, NameValueCollection config)
         {
             this.sessionStateStoreProvider = sessionStateStoreProvider;
             var versionConfig = config[VersionConfigAttributeName];
@@ -49,7 +77,13 @@ namespace Oriflame.Web.Redis
                 versionConfig = "auto";
             }
 
-            _applicationVersion = InitializeVersion(versionConfig);
+            applicationVersion = InitializeVersion(versionConfig);
+        }
+
+        protected virtual bool IsSessionVersionValid(ISessionStateItemCollection sessionData)
+        {
+            var sessionVersion = sessionData?[SessionVersionKey] as string;
+            return applicationVersion == sessionVersion;
         }
 
         private static string InitializeVersion(string versionConfig)
@@ -62,7 +96,6 @@ namespace Oriflame.Web.Redis
             var appType = HttpContext.Current?.ApplicationInstance?.GetType();
             if (appType == null)
             {
-                //_log.Warn("Unable to get web application version for HybridSessionStateProvider, using 'auto'.");
                 return versionConfig;
             }
 
@@ -76,8 +109,5 @@ namespace Oriflame.Web.Redis
                 ? fvi.FileVersion
                 : appType.Assembly.GetName().Version.ToString();
         }
-
-        //_usesVersioning = !string.IsNullOrEmpty(_applicationVersion);
-        //_log.InfoFormat("HybridSessionStateProvider version set to {0}.", _applicationVersion);
     }
 }
