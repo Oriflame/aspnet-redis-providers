@@ -130,7 +130,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 ssp2.Initialize("ssp2", config);
                 var data2 = await ssp2.GetItemExclusiveAsync(null, sessionId, CancellationToken.None);
 
-                Assert.Equal(0, data2.Item.Items.Count);
+                Assert.Equal(1, data2.Item.Items.Count);
 
                 //var items2 = data2.Item.Items.Keys;
 
@@ -190,7 +190,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 ssp2.Initialize("ssp2", config);
                 var data2 = await ssp2.GetItemAsync(null, sessionId, CancellationToken.None);
 
-                Assert.Equal(0, data2.Item.Items.Count);
+                Assert.Equal(1, data2.Item.Items.Count);
 
                 // remove data and lock from redis
                 DisposeRedisConnectionWrapper();
