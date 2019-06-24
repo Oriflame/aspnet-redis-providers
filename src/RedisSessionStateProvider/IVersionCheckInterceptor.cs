@@ -7,7 +7,7 @@ using Microsoft.AspNet.SessionState;
 
 namespace Oriflame.Web.Redis
 {
-    public interface ISessionVersionProvider
+    public interface IVersionCheckInterceptor
     {
         void SetVersion(ISessionStateItemCollection sessionData);
         Task<GetItemResult> SanitizeSessionByVersion(HttpContextBase context, string id, GetItemResult result, bool isResultExclusivelyLocked, CancellationToken cancellationToken);

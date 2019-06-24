@@ -99,8 +99,8 @@ namespace Microsoft.Web.Redis.FunctionalTests
                     ["redisSerializerType"] = typeof(RawStringSerializer).AssemblyQualifiedName,
                     ["port"] = "0",
                     ["ssl"] = "false",
-                    [SessionVersionFromApplicationProvider.VersionConfigAttributeName] = "1.2.3.4",
-                    [Oriflame.Web.Redis.RedisSessionStateProvider.SessionVersionProviderTypeAttributeName] = typeof(SessionVersionFromApplicationProvider).FullName
+                    [ApplicationVersionCheckInterceptor.VersionConfigAttributeName] = "1.2.3.4",
+                    [Oriflame.Web.Redis.RedisSessionStateProvider.SessionVersionProviderTypeAttributeName] = typeof(ApplicationVersionCheckInterceptor).FullName
                 };
 
                 ssp.Initialize("ssp", config);
@@ -124,7 +124,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 // simulation of invalid version
                 actualConnection.HashSet(ssp.cache.Keys.DataKey,
-                    new[] { new HashEntry(SessionVersionFromApplicationProvider.SessionVersionKey, "modified-by-test") });
+                    new[] { new HashEntry(ApplicationVersionCheckInterceptor.SessionVersionKey, "modified-by-test") });
 
                 var ssp2 = new Oriflame.Web.Redis.RedisSessionStateProvider();
                 ssp2.Initialize("ssp2", config);
@@ -159,8 +159,8 @@ namespace Microsoft.Web.Redis.FunctionalTests
                     ["redisSerializerType"] = typeof(RawStringSerializer).AssemblyQualifiedName,
                     ["port"] = "0",
                     ["ssl"] = "false",
-                    [SessionVersionFromApplicationProvider.VersionConfigAttributeName] = "1.2.3.4",
-                    [Oriflame.Web.Redis.RedisSessionStateProvider.SessionVersionProviderTypeAttributeName] = typeof(SessionVersionFromApplicationProvider).FullName
+                    [ApplicationVersionCheckInterceptor.VersionConfigAttributeName] = "1.2.3.4",
+                    [Oriflame.Web.Redis.RedisSessionStateProvider.SessionVersionProviderTypeAttributeName] = typeof(ApplicationVersionCheckInterceptor).FullName
                 };
 
                 ssp.Initialize("ssp", config);
@@ -184,7 +184,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 // simulation of invalid version
                 actualConnection.HashSet(ssp.cache.Keys.DataKey,
-                    new[] { new HashEntry(SessionVersionFromApplicationProvider.SessionVersionKey, "modified-by-test") });
+                    new[] { new HashEntry(ApplicationVersionCheckInterceptor.SessionVersionKey, "modified-by-test") });
 
                 var ssp2 = new Oriflame.Web.Redis.RedisSessionStateProvider();
                 ssp2.Initialize("ssp2", config);

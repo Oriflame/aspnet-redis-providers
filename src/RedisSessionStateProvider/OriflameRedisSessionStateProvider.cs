@@ -10,11 +10,11 @@ namespace Oriflame.Web.Redis
 {
     public class RedisSessionStateProvider : Microsoft.Web.Redis.RedisSessionStateProvider
     {
-        private class IgnoreSessionVersionProvider : ISessionVersionProvider
+        private class NoVersionCheckInterceptor : IVersionCheckInterceptor
         {
-            public static readonly IgnoreSessionVersionProvider Instance = new IgnoreSessionVersionProvider();
+            public static readonly NoVersionCheckInterceptor Instance = new NoVersionCheckInterceptor();
 
-            private IgnoreSessionVersionProvider()
+            private NoVersionCheckInterceptor()
             {
             }
 
@@ -33,7 +33,7 @@ namespace Oriflame.Web.Redis
         }
 
         public const string SessionVersionProviderTypeAttributeName = "SessionVersionProviderType";
-        private ISessionVersionProvider versionProvider = IgnoreSessionVersionProvider.Instance;
+        private IVersionCheckInterceptor versionCheckInterceptor = NoVersionCheckInterceptor.Instance;
 
         public override void Initialize(string name, NameValueCollection config)
         {
@@ -44,8 +44,8 @@ namespace Oriflame.Web.Redis
             {
                 // todo throw custom error
                 var versionProviderType = Type.GetType(sessionVersionProviderTypeName, true);
-                versionProvider = (ISessionVersionProvider)Activator.CreateInstance(versionProviderType);
-                versionProvider.Initialize(this, config);
+                versionCheckInterceptor = (IVersionCheckInterceptor)Activator.CreateInstance(versionProviderType);
+                versionCheckInterceptor.Initialize(this, config);
             }
         }
 
@@ -80,7 +80,7 @@ namespace Oriflame.Web.Redis
             bool isResultExclusivelyLocked,
             CancellationToken cancellationToken)
         {
-            return versionProvider.SanitizeSessionByVersion(context, id, result, isResultExclusivelyLocked, cancellationToken);
+            return versionCheckInterceptor.SanitizeSessionByVersion(context, id, result, isResultExclusivelyLocked, cancellationToken);
         }
 
         private void SetVersion(ISessionStateItemCollection sessionData)
@@ -90,7 +90,7 @@ namespace Oriflame.Web.Redis
                 return;
             }
 
-            versionProvider.SetVersion(sessionData);
+            versionCheckInterceptor.SetVersion(sessionData);
         }
     }
 }

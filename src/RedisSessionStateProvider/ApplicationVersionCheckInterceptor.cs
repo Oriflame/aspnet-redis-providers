@@ -8,9 +8,9 @@ using Microsoft.AspNet.SessionState;
 
 namespace Oriflame.Web.Redis
 {
-    public class SessionVersionFromApplicationProvider : ISessionVersionProvider
+    public class ApplicationVersionCheckInterceptor : IVersionCheckInterceptor
     {
-        public const string SessionVersionKey = nameof(SessionVersionFromApplicationProvider) + ".Version";
+        public const string SessionVersionKey = nameof(ApplicationVersionCheckInterceptor) + ".Version";
         public const string VersionConfigAttributeName = "version";
 
         private static string applicationVersion;
@@ -43,7 +43,8 @@ namespace Oriflame.Web.Redis
             {
                 var result2 = await sessionStateStoreProvider.GetItemExclusiveAsync(context, id, cancellationToken)
                     .ConfigureAwait(false);
-                if (result2.Locked) // TODO verify consequences in code review
+
+                if (result2.Locked)
                 {
                     return result;
                 }
@@ -53,6 +54,12 @@ namespace Oriflame.Web.Redis
             }
 
             sessionData.Clear();
+
+            // We need to call store and get (cleared) session data from Redis session stored
+            // so that sessionData.Dirty == false.
+            // Otherwise, Microsoft.AspNet.SessionState.SessionStateModuleAsync::InitStateStoreItem(bool addToContext)
+            // will clear a dirty flag and we loose information about
+            // the need to clear session data at the end of HTTP request
             await sessionStateStoreProvider.SetAndReleaseItemExclusiveAsync(context, id, result.Item, result.LockId, false, cancellationToken)
                 .ConfigureAwait(false);
 
