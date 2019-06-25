@@ -3,6 +3,7 @@
     <TargetFramework>net462</TargetFramework>
     <AssemblyName>Microsoft.Web.RedisSessionStateProvider.Functional.Tests</AssemblyName>
     <RootNamespace>Microsoft.Web.Redis.FunctionalTests</RootNamespace>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <PropertyGroup>
     <DebugSymbols>true</DebugSymbols>

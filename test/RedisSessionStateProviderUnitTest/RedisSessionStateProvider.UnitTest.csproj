@@ -3,6 +3,7 @@
     <RootNamespace>Microsoft.Web.Redis.Tests</RootNamespace>
     <AssemblyName>Microsoft.Web.RedisSessionStateProvider.Unit.Tests</AssemblyName>
     <TargetFramework>net462</TargetFramework>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <PropertyGroup>
     <DebugSymbols>true</DebugSymbols>
