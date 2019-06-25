@@ -35,11 +35,11 @@ namespace Microsoft.Web.Redis
         /// </summary>
         public static Exception LastException
         {
-            get 
+            get
             {
                 if (HttpContext.Current != null)
                 {
-                    return (Exception) HttpContext.Current.Items[_lastException];
+                    return (Exception)HttpContext.Current.Items[_lastException];
                 }
                 return null;
             }
@@ -49,11 +49,15 @@ namespace Microsoft.Web.Redis
                 if (HttpContext.Current != null)
                 {
                     HttpContext.Current.Items[_lastException] = value;
-                }             
+                }
             }
         }
 
-        private void GetAccessToStore(string id) 
+        //protected RedisSessionStateProvider()
+        //{
+        //}
+
+        protected void GetAccessToStore(string id)
         {
             if (cache == null)
             {
@@ -68,15 +72,15 @@ namespace Microsoft.Web.Redis
         public override void Initialize(string name, System.Collections.Specialized.NameValueCollection config)
         {
             if (config == null)
-            { 
+            {
                 throw new ArgumentNullException("config");
             }
-            
+
             if (name == null || name.Length == 0)
             {
                 name = "MyCacheStore";
             }
-            
+
             if (String.IsNullOrEmpty(config["description"]))
             {
                 config.Remove("description");
@@ -88,7 +92,7 @@ namespace Microsoft.Web.Redis
             // If configuration exists then use it otherwise read from config file and create one
             if (configuration == null)
             {
-                lock (configurationCreationLock) 
+                lock (configurationCreationLock)
                 {
                     if (configuration == null)
                     {
@@ -169,7 +173,8 @@ namespace Microsoft.Web.Redis
                     ISessionStateItemCollection sessionData = new ChangeTrackingSessionStateItemCollection(redisUtility);
                     sessionData["SessionStateActions"] = SessionStateActions.InitializeItem;
                     GetAccessToStore(id);
-                    // Converting timout from min to sec
+                    OnCreateUninitializedItemAsync(sessionData);
+                    // Converting timeout from min to sec
                     cache.Set(sessionData, (timeout * FROM_MIN_TO_SEC));
                 }
             }
@@ -207,6 +212,11 @@ namespace Microsoft.Web.Redis
             return await Task.FromResult(new GetItemResult(sessionData, locked, lockAge, lockId, actions));
         }
 
+        protected virtual void OnCreateUninitializedItemAsync(ISessionStateItemCollection sessionData)
+        {
+
+        }
+
         private SessionStateStoreData GetItemFromSessionStore(bool isWriteLockRequired, HttpContextBase context, string id, CancellationToken cancellationToken, out bool locked, out TimeSpan lockAge, out object lockId, out SessionStateActions actions)
         {
             try
@@ -222,7 +232,7 @@ namespace Microsoft.Web.Redis
                 }
                 GetAccessToStore(id);
                 ISessionStateItemCollection sessionData = null;
-            
+
                 int sessionTimeout;
                 bool isLockTaken = false;
                 //Take read or write lock and if locking successful than get data in sessionData and also update session timeout
@@ -253,7 +263,7 @@ namespace Microsoft.Web.Redis
                 // If locking is not successful then do not return any result just return lockAge, locked=true and lockId.
                 // ASP.NET tries to acquire lock again in 0.5 sec by calling this method again. Using lockAge it finds if 
                 // lock has been taken more than http request timeout than ASP.NET calls ReleaseItemExclusive and calls this method again to get lock.
-                if (locked) 
+                if (locked)
                 {
                     lockAge = cache.GetLockAge(lockId);
                     return null;
@@ -266,9 +276,9 @@ namespace Microsoft.Web.Redis
                     ReleaseItemExclusiveAsync(context, id, lockId, cancellationToken).Wait();
                     return null;
                 }
-            
+
                 // Restore action flag from session data
-                if (sessionData["SessionStateActions"] != null) 
+                if (sessionData["SessionStateActions"] != null)
                 {
                     actions = (SessionStateActions)Enum.Parse(typeof(SessionStateActions), sessionData["SessionStateActions"].ToString());
                 }

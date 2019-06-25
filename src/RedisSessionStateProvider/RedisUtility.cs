@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using Oriflame.Web.Redis;
 
 namespace Microsoft.Web.Redis
 {

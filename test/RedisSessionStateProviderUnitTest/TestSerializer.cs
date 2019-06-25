@@ -4,6 +4,7 @@
 //
 
 using System.Text;
+using Oriflame.Web.Redis;
 
 namespace Microsoft.Web.Redis.Tests
 {

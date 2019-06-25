@@ -5,6 +5,7 @@
 
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Oriflame.Web.Redis;
 
 namespace Microsoft.Web.Redis
 {
