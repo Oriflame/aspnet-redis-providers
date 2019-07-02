@@ -11,7 +11,7 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Configuration" />
     <PackageReference Include="Microsoft.AspNet.SessionState.SessionStateModule" Version="1.1.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.0.519" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="web.config.transform" copyToOutput="false">
