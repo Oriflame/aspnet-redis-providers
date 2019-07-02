@@ -19,7 +19,6 @@ namespace Microsoft.Web.Redis
         
         internal IRedisClientConnection redisConnection;
         ProviderConfiguration configuration;
-        
 
         public RedisConnectionWrapper(ProviderConfiguration configuration, string id)
         {
@@ -70,12 +69,12 @@ namespace Microsoft.Web.Redis
 
                 local SessionTimeout = redis.call('HGET', KEYS[2], 'SessionTimeout')
                 if SessionTimeout ~= false then
-                    redis.call('EXPIRE',KEYS[1], SessionTimeout) 
-                    redis.call('EXPIRE',KEYS[2], SessionTimeout) 
+                    redis.call('EXPIRE',KEYS[1], SessionTimeout + 90) 
+                    redis.call('EXPIRE',KEYS[2], SessionTimeout + 90) 
                 else
-                    redis.call('EXPIRE',KEYS[1],ARGV[1]) 
+                    redis.call('EXPIRE',KEYS[1],ARGV[1] + 90) 
                     redis.call('HMSET', KEYS[2], 'SessionTimeout', ARGV[1])
-                    redis.call('EXPIRE',KEYS[2],ARGV[1]) 
+                    redis.call('EXPIRE',KEYS[2],ARGV[1] + 90) 
                 end
                 return 1"
                 );
@@ -99,9 +98,9 @@ namespace Microsoft.Web.Redis
         // this order should not change LUA script depends on it
         static readonly string setScript = (@" 
                 redis.call('HMSET', KEYS[1], unpack(ARGV, 3, ARGV[1]))
-                redis.call('EXPIRE',KEYS[1],ARGV[2]) 
+                redis.call('EXPIRE',KEYS[1],ARGV[2] + 90) 
                 redis.call('HMSET', KEYS[2], 'SessionTimeout', ARGV[2])
-                redis.call('EXPIRE',KEYS[2],ARGV[2]) 
+                redis.call('EXPIRE',KEYS[2],ARGV[2] + 90) 
                 return 1"
                 );
 
@@ -164,8 +163,8 @@ namespace Microsoft.Web.Redis
                 local SessionTimeout = redis.call('HGET', KEYS[3], 'SessionTimeout')
                 if SessionTimeout ~= false then 
                     retArray[3] = SessionTimeout 
-                    redis.call('EXPIRE',KEYS[2], SessionTimeout) 
-                    redis.call('EXPIRE',KEYS[3], SessionTimeout) 
+                    redis.call('EXPIRE',KEYS[2], SessionTimeout + 90) 
+                    redis.call('EXPIRE',KEYS[3], SessionTimeout + 90) 
                 else 
                     retArray[3] = '-1' 
                 end
@@ -215,8 +214,8 @@ namespace Microsoft.Web.Redis
                     local SessionTimeout = redis.call('HGET', KEYS[3], 'SessionTimeout')
                     if SessionTimeout ~= false then 
                         retArray[3] = SessionTimeout 
-                        redis.call('EXPIRE',KEYS[2], SessionTimeout) 
-                        redis.call('EXPIRE',KEYS[3], SessionTimeout) 
+                        redis.call('EXPIRE',KEYS[2], SessionTimeout + 90) 
+                        redis.call('EXPIRE',KEYS[3], SessionTimeout + 90) 
                     else 
                         retArray[3] = '-1' 
                     end
@@ -266,10 +265,10 @@ namespace Microsoft.Web.Redis
                 end 
                 local SessionTimeout = redis.call('HGET', KEYS[3], 'SessionTimeout')
                 if SessionTimeout ~= false then 
-                    redis.call('EXPIRE',KEYS[2], SessionTimeout) 
-                    redis.call('EXPIRE',KEYS[3], SessionTimeout) 
+                    redis.call('EXPIRE',KEYS[2], SessionTimeout + 90) 
+                    redis.call('EXPIRE',KEYS[3], SessionTimeout + 90) 
                 else 
-                    redis.call('EXPIRE',KEYS[2],ARGV[2])
+                    redis.call('EXPIRE',KEYS[2],ARGV[2] + 90)
                 end
                 return 1
                 ");
@@ -315,9 +314,9 @@ namespace Microsoft.Web.Redis
                 end
                 if tonumber(ARGV[3]) ~= 0 then redis.call('HDEL', KEYS[2], unpack(ARGV, ARGV[4], ARGV[5])) end
                 if tonumber(ARGV[6]) ~= 0 then redis.call('HMSET', KEYS[2], unpack(ARGV, ARGV[7], ARGV[8])) end
-                redis.call('EXPIRE',KEYS[2],ARGV[2])
+                redis.call('EXPIRE',KEYS[2],ARGV[2] + 90)
                 redis.call('HMSET', KEYS[3], 'SessionTimeout', ARGV[2])
-                redis.call('EXPIRE',KEYS[3],ARGV[2]) 
+                redis.call('EXPIRE',KEYS[3],ARGV[2] + 90) 
                 redis.call('DEL',KEYS[1])");
 
         private bool TryUpdateAndReleaseLockPrepare(object lockId, ISessionStateItemCollection data, int sessionTimeout, out string[] keyArgs, out object[] valueArgs)

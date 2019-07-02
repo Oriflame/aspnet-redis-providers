@@ -8,6 +8,7 @@
     <Description>Custom session state provider for redis cache</Description>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Web" />
     <Reference Include="System.Configuration" />
     <PackageReference Include="Microsoft.AspNet.SessionState.SessionStateModule" Version="1.1.0" />

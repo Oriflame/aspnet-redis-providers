@@ -13,12 +13,15 @@ using System.Collections.Generic;
 using System.Web.Configuration;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Web;
 using Microsoft.AspNet.SessionState;
 
 namespace Microsoft.Web.Redis.Tests
 {
     public class RedisSessionStateProviderTests
     {
+        public static HttpContextBase FakeHttpContext => A.Fake<HttpContextBase>();
+
         [Fact]
         public void Initialize_WithNullConfig()
         {
@@ -56,7 +59,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
-            await sessionStateStore.CreateUninitializedItemAsync(null, id, 15, CancellationToken.None);
+            await sessionStateStore.CreateUninitializedItemAsync(FakeHttpContext, id, 15, CancellationToken.None);
             A.CallTo(() => mockCache.Set(A<ISessionStateItemCollection>.That.Matches(
                 o => o.Count == 1 && SessionStateActions.InitializeItem.Equals(o["SessionStateActions"]) 
                 ), 900)).MustHaveHappened();
@@ -82,7 +85,7 @@ namespace Microsoft.Web.Redis.Tests
             sessionStateStore.cache = mockCache;
 
             SessionStateStoreData sessionStateStoreData = null;
-            GetItemResult data = await sessionStateStore.GetItemAsync(null, id, CancellationToken.None);
+            GetItemResult data = await sessionStateStore.GetItemAsync(FakeHttpContext, id, CancellationToken.None);
             sessionStateStoreData = data.Item;
             locked = data.Locked;
             lockAge = data.LockAge;
@@ -118,7 +121,7 @@ namespace Microsoft.Web.Redis.Tests
             sessionStateStore.cache = mockCache;
             SessionStateStoreData sessionStateStoreData;
 
-            GetItemResult data = await sessionStateStore.GetItemAsync(null, id, CancellationToken.None);
+            GetItemResult data = await sessionStateStore.GetItemAsync(FakeHttpContext, id, CancellationToken.None);
             sessionStateStoreData = data.Item;
             locked = data.Locked;
             lockAge = data.LockAge;
@@ -160,7 +163,7 @@ namespace Microsoft.Web.Redis.Tests
             sessionStateStore.cache = mockCache;
             SessionStateStoreData sessionStateStoreData;
 
-            GetItemResult data = await sessionStateStore.GetItemAsync(null, id, CancellationToken.None);
+            GetItemResult data = await sessionStateStore.GetItemAsync(FakeHttpContext, id, CancellationToken.None);
             sessionStateStoreData = data.Item;
             locked = data.Locked;
             lockAge = data.LockAge;
@@ -196,7 +199,7 @@ namespace Microsoft.Web.Redis.Tests
             sessionStateStore.cache = mockCache;
             SessionStateStoreData sessionStateStoreData;
 
-            GetItemResult data = await sessionStateStore.GetItemExclusiveAsync(null, id, CancellationToken.None);
+            GetItemResult data = await sessionStateStore.GetItemExclusiveAsync(FakeHttpContext, id, CancellationToken.None);
             sessionStateStoreData = data.Item;
             locked = data.Locked;
             lockAge = data.LockAge;
@@ -237,8 +240,7 @@ namespace Microsoft.Web.Redis.Tests
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
             SessionStateStoreData sessionStateStoreData;
-
-            GetItemResult data = await sessionStateStore.GetItemExclusiveAsync(null, id, CancellationToken.None);
+            GetItemResult data = await sessionStateStore.GetItemExclusiveAsync(FakeHttpContext, id, CancellationToken.None);
             sessionStateStoreData = data.Item;
             locked = data.Locked;
             lockAge = data.LockAge;
@@ -262,7 +264,7 @@ namespace Microsoft.Web.Redis.Tests
             
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
-            await sessionStateStore.ResetItemTimeoutAsync(null, id, CancellationToken.None);
+            await sessionStateStore.ResetItemTimeoutAsync(FakeHttpContext, id, CancellationToken.None);
             A.CallTo(() => mockCache.UpdateExpiryTime(900)).MustHaveHappened();
         }
 
@@ -286,7 +288,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
-            await sessionStateStore.ReleaseItemExclusiveAsync(null, id, "lockId", CancellationToken.None);
+            await sessionStateStore.ReleaseItemExclusiveAsync(FakeHttpContext, id, "lockId", CancellationToken.None);
             A.CallTo(() => mockCache.TryReleaseLockIfLockIdMatch(A<object>.Ignored, A<int>.Ignored)).MustHaveHappened();
         }
 
@@ -300,7 +302,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
-            await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, null, true, CancellationToken.None);
+            await sessionStateStore.SetAndReleaseItemExclusiveAsync(FakeHttpContext, id, sssd, null, true, CancellationToken.None);
             A.CallTo(() => mockCache.Set(A<ISessionStateItemCollection>.That.Matches(o => o.Count == 0), 900)).MustHaveHappened();
         }
 
@@ -316,7 +318,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
-            await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, null, true, CancellationToken.None);
+            await sessionStateStore.SetAndReleaseItemExclusiveAsync(FakeHttpContext, id, sssd, null, true, CancellationToken.None);
             A.CallTo(() => mockCache.Set(A<ISessionStateItemCollection>.That.Matches(
                 o => o.Count == 1 && o["session-key"] != null
                 ), 900)).MustHaveHappened();
@@ -332,7 +334,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
-            await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, 7, false, CancellationToken.None);
+            await sessionStateStore.SetAndReleaseItemExclusiveAsync(FakeHttpContext, id, sssd, 7, false, CancellationToken.None);
             A.CallTo(() => mockCache.TryUpdateAndReleaseLock(A<object>.Ignored, A<ISessionStateItemCollection>.Ignored, 900)).MustNotHaveHappened();
         }
 
@@ -349,7 +351,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
-            await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, 7, false, CancellationToken.None);
+            await sessionStateStore.SetAndReleaseItemExclusiveAsync(FakeHttpContext, id, sssd, 7, false, CancellationToken.None);
             A.CallTo(() => mockCache.TryUpdateAndReleaseLock(A<object>.Ignored, 
                 A<ChangeTrackingSessionStateItemCollection>.That.Matches(o => o.Count == 0 && o.GetModifiedKeys().Count == 0 && o.GetDeletedKeys().Count == 1), 900)).MustHaveHappened();
         }
@@ -366,7 +368,7 @@ namespace Microsoft.Web.Redis.Tests
             var mockCache = A.Fake<ICacheConnection>();
             RedisSessionStateProvider sessionStateStore = new Oriflame.Web.Redis.RedisSessionStateProvider();
             sessionStateStore.cache = mockCache;
-            await sessionStateStore.SetAndReleaseItemExclusiveAsync(null, id, sssd, 7, false, CancellationToken.None);
+            await sessionStateStore.SetAndReleaseItemExclusiveAsync(FakeHttpContext, id, sssd, 7, false, CancellationToken.None);
             A.CallTo(() => mockCache.TryUpdateAndReleaseLock(A<object>.Ignored, 
                 A<ChangeTrackingSessionStateItemCollection>.That.Matches(o => o.Count == 1 && o.GetModifiedKeys().Count == 1 && o.GetDeletedKeys().Count == 0), 900)).MustHaveHappened();  
         }

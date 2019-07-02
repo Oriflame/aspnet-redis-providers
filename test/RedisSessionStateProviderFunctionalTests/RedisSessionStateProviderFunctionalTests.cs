@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Xunit;
 using System.Threading;
 using System.Web;
+using System.Web.SessionState;
 using Microsoft.AspNet.SessionState;
 using Oriflame.Web.Redis;
 
@@ -31,6 +32,16 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 return Encoding.UTF8.GetString(data);
             }
         }
+
+        private class RedisSessionStateProviderForTest : Oriflame.Web.Redis.RedisSessionStateProvider
+        {
+            protected override TimeSpan ToMinutes(int timeout)
+            {
+                return TimeSpan.FromSeconds(timeout);
+            }
+        }
+
+        private static HttpContextBase FakeHttpContext => RedisSessionStateProviderTests.FakeHttpContext;
 
         private string ResetRedisConnectionWrapperAndConfiguration()
         {
@@ -54,10 +65,10 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 // Inserting empty session with "SessionStateActions.InitializeItem" flag into redis server
                 RedisSessionStateProvider ssp = new Oriflame.Web.Redis.RedisSessionStateProvider();
-                await ssp.CreateUninitializedItemAsync(null, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
+                await ssp.CreateUninitializedItemAsync(FakeHttpContext, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
 
                 // Get write lock and session from cache
-                GetItemResult data = await ssp.GetItemExclusiveAsync(null, sessionId, CancellationToken.None);
+                GetItemResult data = await ssp.GetItemExclusiveAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 // Get actual connection and varify lock and session timeout
                 IDatabase actualConnection = GetRealRedisConnection();
@@ -68,14 +79,14 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 data.Item.Items["key"] = "value";
 
                 // session update
-                await ssp.SetAndReleaseItemExclusiveAsync(null, sessionId, data.Item, data.LockId, false, CancellationToken.None);
+                await ssp.SetAndReleaseItemExclusiveAsync(FakeHttpContext, sessionId, data.Item, data.LockId, false, CancellationToken.None);
                 Assert.Equal(1, actualConnection.HashGetAll(ssp.cache.Keys.DataKey).Length);
 
                 // reset sessions timoue
-                await ssp.ResetItemTimeoutAsync(null, sessionId, CancellationToken.None);
+                await ssp.ResetItemTimeoutAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 // End request
-                await ssp.EndRequestAsync(null);
+                await ssp.EndRequestAsync(FakeHttpContext);
 
                 // remove data and lock from redis
                 DisposeRedisConnectionWrapper();
@@ -105,10 +116,10 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 ssp.Initialize("ssp", config);
 
-                await ssp.CreateUninitializedItemAsync(null, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
+                await ssp.CreateUninitializedItemAsync(FakeHttpContext, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
 
                 // Get write lock and session from cache
-                var data = await ssp.GetItemExclusiveAsync(null, sessionId, CancellationToken.None);
+                var data = await ssp.GetItemExclusiveAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 // Get actual connection and verify lock and session timeout
                 var actualConnection = GetRealRedisConnection();
@@ -119,7 +130,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 data.Item.Items["key"] = "value";
 
                 // session update
-                await ssp.SetAndReleaseItemExclusiveAsync(null, sessionId, data.Item, data.LockId, false, CancellationToken.None);
+                await ssp.SetAndReleaseItemExclusiveAsync(FakeHttpContext, sessionId, data.Item, data.LockId, false, CancellationToken.None);
                 Assert.Equal(2, actualConnection.HashGetAll(ssp.cache.Keys.DataKey).Length);
 
                 // simulation of invalid version
@@ -128,7 +139,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 var ssp2 = new Oriflame.Web.Redis.RedisSessionStateProvider();
                 ssp2.Initialize("ssp2", config);
-                var data2 = await ssp2.GetItemExclusiveAsync(null, sessionId, CancellationToken.None);
+                var data2 = await ssp2.GetItemExclusiveAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 Assert.Equal(1, data2.Item.Items.Count);
 
@@ -136,7 +147,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 data2.Item.Items["test2"] = "test value";
 
-                await ssp2.SetAndReleaseItemExclusiveAsync(null, sessionId, data2.Item, data2.LockId, false, CancellationToken.None);
+                await ssp2.SetAndReleaseItemExclusiveAsync(FakeHttpContext, sessionId, data2.Item, data2.LockId, false, CancellationToken.None);
                 Assert.Equal(2, actualConnection.HashGetAll(ssp2.cache.Keys.DataKey).Length);
                 DisposeRedisConnectionWrapper();
             }
@@ -165,10 +176,10 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 ssp.Initialize("ssp", config);
 
-                await ssp.CreateUninitializedItemAsync(null, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
+                await ssp.CreateUninitializedItemAsync(FakeHttpContext, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
 
                 // Get write lock and session from cache
-                var data = await ssp.GetItemExclusiveAsync(null, sessionId, CancellationToken.None);
+                var data = await ssp.GetItemExclusiveAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 // Get actual connection and verify lock and session timeout
                 var actualConnection = GetRealRedisConnection();
@@ -179,7 +190,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 data.Item.Items["key"] = "value";
 
                 // session update
-                await ssp.SetAndReleaseItemExclusiveAsync(null, sessionId, data.Item, data.LockId, false, CancellationToken.None);
+                await ssp.SetAndReleaseItemExclusiveAsync(FakeHttpContext, sessionId, data.Item, data.LockId, false, CancellationToken.None);
                 Assert.Equal(2, actualConnection.HashGetAll(ssp.cache.Keys.DataKey).Length);
 
                 // simulation of invalid version
@@ -188,7 +199,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 var ssp2 = new Oriflame.Web.Redis.RedisSessionStateProvider();
                 ssp2.Initialize("ssp2", config);
-                var data2 = await ssp2.GetItemAsync(null, sessionId, CancellationToken.None);
+                var data2 = await ssp2.GetItemAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 Assert.Equal(1, data2.Item.Items.Count);
 
@@ -206,10 +217,10 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 // Inserting empty session with "SessionStateActions.InitializeItem" flag into redis server
                 RedisSessionStateProvider ssp = new Oriflame.Web.Redis.RedisSessionStateProvider();
-                await ssp.CreateUninitializedItemAsync(null, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
+                await ssp.CreateUninitializedItemAsync(FakeHttpContext, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
 
                 // Get write lock and session from cache
-                GetItemResult data = await ssp.GetItemAsync(null, sessionId, CancellationToken.None);
+                GetItemResult data = await ssp.GetItemAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 // Get actual connection and varify lock and session timeout
                 IDatabase actualConnection = GetRealRedisConnection();
@@ -217,7 +228,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 Assert.Equal(((int)RedisSessionStateProvider.configuration.SessionTimeout.TotalSeconds).ToString(), actualConnection.HashGet(ssp.cache.Keys.InternalKey, "SessionTimeout").ToString());
 
                 // reset sessions timoue
-                await ssp.ResetItemTimeoutAsync(null, sessionId, CancellationToken.None);
+                await ssp.ResetItemTimeoutAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 // End request
                 await ssp.EndRequestAsync(null);
@@ -236,10 +247,10 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
                 // Inserting empty session with "SessionStateActions.InitializeItem" flag into redis server
                 RedisSessionStateProvider ssp = new Oriflame.Web.Redis.RedisSessionStateProvider();
-                await ssp.CreateUninitializedItemAsync(null, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
+                await ssp.CreateUninitializedItemAsync(FakeHttpContext, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalMinutes, CancellationToken.None);
 
                 // Get write lock and session from cache
-                GetItemResult data = await ssp.GetItemExclusiveAsync(null, sessionId, CancellationToken.None);
+                GetItemResult data = await ssp.GetItemExclusiveAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 // Get actual connection and varify lock and session timeout
                 IDatabase actualConnection = GetRealRedisConnection();
@@ -251,18 +262,18 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 data.Item.Timeout = 5;
 
                 // session update
-                await ssp.SetAndReleaseItemExclusiveAsync(null, sessionId, data.Item, data.LockId, false, CancellationToken.None);
+                await ssp.SetAndReleaseItemExclusiveAsync(FakeHttpContext, sessionId, data.Item, data.LockId, false, CancellationToken.None);
                 Assert.Equal(1, actualConnection.HashGetAll(ssp.cache.Keys.DataKey).Length);
                 Assert.Equal("300", actualConnection.HashGet(ssp.cache.Keys.InternalKey, "SessionTimeout").ToString());
 
                 // reset sessions timoue
-                await ssp.ResetItemTimeoutAsync(null, sessionId, CancellationToken.None);
+                await ssp.ResetItemTimeoutAsync(FakeHttpContext, sessionId, CancellationToken.None);
 
                 // End request
-                await ssp.EndRequestAsync(null);
+                await ssp.EndRequestAsync(FakeHttpContext);
 
                 // Verify that GetItemExclusive returns timeout from redis
-                GetItemResult data_1 = await ssp.GetItemExclusiveAsync(null, sessionId, CancellationToken.None);
+                GetItemResult data_1 = await ssp.GetItemExclusiveAsync(FakeHttpContext, sessionId, CancellationToken.None);
                 Assert.Equal(5, data.Item.Timeout);
 
                 // remove data and lock from redis
@@ -277,7 +288,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
             {
                 string sessionId = ResetRedisConnectionWrapperAndConfiguration();
                 RedisSessionStateProvider ssp = new Oriflame.Web.Redis.RedisSessionStateProvider();
-                await ssp.ReleaseItemExclusiveAsync(null, sessionId, null, CancellationToken.None);
+                await ssp.ReleaseItemExclusiveAsync(FakeHttpContext, sessionId, null, CancellationToken.None);
                 DisposeRedisConnectionWrapper();
             }
         }
@@ -290,6 +301,37 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 string sessionId = ResetRedisConnectionWrapperAndConfiguration();
                 RedisSessionStateProvider ssp = new Oriflame.Web.Redis.RedisSessionStateProvider();
                 await ssp.RemoveItemAsync(null, sessionId, null, null, CancellationToken.None);
+                DisposeRedisConnectionWrapper();
+            }
+        }
+
+        [Fact]
+        public async Task SessionEnd()
+        {
+            // arrange
+            using (RedisServer redisServer = new RedisServer())
+            {
+                string sessionId = ResetRedisConnectionWrapperAndConfiguration();
+                var config = new NameValueCollection
+                {
+                    [Oriflame.Web.Redis.RedisSessionStateProvider.SessionEndPollingIntervalKey] = "00:00:01"
+                };
+                Oriflame.Web.Redis.RedisSessionStateProvider.InitializeStatically(config);
+                RedisSessionStateProvider.configuration.SessionTimeout = TimeSpan.FromSeconds(1);
+                RedisSessionStateProvider ssp = new RedisSessionStateProviderForTest();
+
+                // act
+                SessionStateStoreData itemFromSessionEnd = null;
+                ssp.SetItemExpireCallback((id, item) => { itemFromSessionEnd = item; });
+
+                await ssp.CreateUninitializedItemAsync(FakeHttpContext, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalSeconds, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                // assert
+                await Task.Delay(TimeSpan.FromSeconds(15)) // TODO Why so long interval is required to always pass the test?
+                    .ConfigureAwait(false);
+
+                Assert.NotNull(itemFromSessionEnd);
                 DisposeRedisConnectionWrapper();
             }
         }

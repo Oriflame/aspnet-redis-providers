@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RedisSessionStateProvider.FunctionalTests", "test\RedisSessionStateProviderFunctionalTests\RedisSessionStateProvider.FunctionalTests.csproj", "{A813B24D-D830-44B8-8C02-3827A12A20B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedisSessionStateProvider.UnitTest", "test\RedisSessionStateProviderUnitTest\RedisSessionStateProvider.UnitTest.csproj", "{5891CF39-E67D-4BBD-9F70-426ABA999FCD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RedisSessionStateProvider.UnitTest", "test\RedisSessionStateProviderUnitTest\RedisSessionStateProvider.UnitTest.csproj", "{5891CF39-E67D-4BBD-9F70-426ABA999FCD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
