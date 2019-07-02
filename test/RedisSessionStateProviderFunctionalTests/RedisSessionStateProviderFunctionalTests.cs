@@ -43,6 +43,11 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
         private static HttpContextBase FakeHttpContext => RedisSessionStateProviderTests.FakeHttpContext;
 
+        public RedisSessionStateProviderFunctionalTests()
+        {
+            Oriflame.Web.Redis.RedisSessionStateProvider.InitializeStatically(new NameValueCollection());
+        }
+
         private string ResetRedisConnectionWrapperAndConfiguration()
         {
             RedisConnectionWrapper.sharedConnection = null;

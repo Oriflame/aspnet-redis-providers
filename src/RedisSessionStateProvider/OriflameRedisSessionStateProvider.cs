@@ -37,7 +37,7 @@ namespace Oriflame.Web.Redis
         internal const string SessionEndPollingIntervalKey = "SessionEndPollingInterval";
         private IVersionCheckInterceptor versionCheckInterceptor = NoVersionCheckInterceptor.Instance;
         private static bool isInitializedStatically;
-        private static object staticLock;
+        private static readonly object staticLock = new object();
         private static MemoryCache localCache;
         private SessionStateItemExpireCallback expireCallback;
 
@@ -69,6 +69,10 @@ namespace Oriflame.Web.Redis
 
         internal static void InitializeStatically(NameValueCollection config)
         {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
             var configCollection = new NameValueCollection();
             var pollingInterval = config[SessionEndPollingIntervalKey];
             if (!string.IsNullOrEmpty(pollingInterval))
@@ -88,14 +92,22 @@ namespace Oriflame.Web.Redis
         public override async Task<GetItemResult> GetItemAsync(HttpContextBase context, string id, CancellationToken cancellationToken)
         {
             var result = await base.GetItemAsync(context, id, cancellationToken).ConfigureAwait(false);
-            UpdateLocalCache(result.Item.Timeout, id);
+            var timeout = result.Item?.Timeout;
+            if (timeout.HasValue)
+            {
+                UpdateLocalCache(timeout.Value, id);
+            }
             return await SanitizeSessionByVersion(context, id, result, false, cancellationToken).ConfigureAwait(false);
         }
 
         public override async Task<GetItemResult> GetItemExclusiveAsync(HttpContextBase context, string id, CancellationToken cancellationToken)
         {
             var result = await base.GetItemExclusiveAsync(context, id, cancellationToken).ConfigureAwait(false);
-            UpdateLocalCache(result.Item.Timeout, id);
+            var timeout = result.Item?.Timeout;
+            if (timeout.HasValue)
+            {
+                UpdateLocalCache(timeout.Value, id);
+            }
 
             return await SanitizeSessionByVersion(context, id, result, true, cancellationToken).ConfigureAwait(false);
         }

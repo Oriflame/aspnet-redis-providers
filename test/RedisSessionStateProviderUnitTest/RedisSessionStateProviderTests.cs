@@ -10,6 +10,7 @@ using System.Collections.Specialized;
 using System.Configuration.Provider;
 using System.Web.SessionState;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Web.Configuration;
 using System.Threading.Tasks;
 using System.Threading;
@@ -20,7 +21,20 @@ namespace Microsoft.Web.Redis.Tests
 {
     public class RedisSessionStateProviderTests
     {
-        public static HttpContextBase FakeHttpContext => A.Fake<HttpContextBase>();
+        public static HttpContextBase FakeHttpContext
+        {
+            get
+            {
+                var fake = A.Fake<HttpContextBase>();
+                A.CallTo(() => fake.Session.Timeout).Returns(90);
+                return fake;
+            }
+        }
+
+        public RedisSessionStateProviderTests()
+        {
+            Oriflame.Web.Redis.RedisSessionStateProvider.InitializeStatically(new NameValueCollection());
+        }
 
         [Fact]
         public void Initialize_WithNullConfig()
