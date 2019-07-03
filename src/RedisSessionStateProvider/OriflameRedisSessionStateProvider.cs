@@ -187,8 +187,12 @@ namespace Oriflame.Web.Redis
             }
 
             var item = new SessionStateStoreData(data, new HttpStaticObjectsCollection(), sessionTimeout);
-            expireCallback(id, item);
             cache.TryRemoveAndReleaseLock(lockId);
+
+            // Expire callback is called intentionally AFTER removing session from Redis
+            // so that other servers potentially waiting for session lock
+            // are not forced to wait until expireCallback is finished
+            expireCallback(id, item);
         }
 
         private Task<GetItemResult> SanitizeSessionByVersion(
