@@ -80,6 +80,8 @@ namespace Oriflame.Web.Redis
                 configCollection["pollingInterval"] = pollingInterval;
             }
 
+            localCache?.Dispose();
+
             localCache = new MemoryCache("RedisSessionStateProvider", configCollection);
         }
 
@@ -144,9 +146,9 @@ namespace Oriflame.Web.Redis
             base.OnCreateUninitializedItemAsync(sessionData);
         }
 
-        protected virtual TimeSpan ToMinutes(int timeout)
+        internal virtual TimeSpan FromMinutes(int minutes)
         {
-            return TimeSpan.FromMinutes(timeout);
+            return TimeSpan.FromMinutes(minutes);
         }
 
         private void UpdateLocalCache(int timeout, string id)
@@ -154,7 +156,7 @@ namespace Oriflame.Web.Redis
             var cachePolicy = new CacheItemPolicy
             {
                 RemovedCallback = OnSessionExpired,
-                SlidingExpiration = ToMinutes(timeout)
+                SlidingExpiration = FromMinutes(timeout)
             };
 
             localCache.AddOrGetExisting(id, id, cachePolicy);
@@ -176,12 +178,18 @@ namespace Oriflame.Web.Redis
             var id = arguments.CacheItem.Key;
             GetAccessToStore(id);
             var requestTimeout = configuration.RequestTimeout.TotalSeconds;
+            var expiration = cache.GetRemainingExpiration();
             if (!cache.TryTakeWriteLockAndGetData(DateTime.Now, (int) requestTimeout, out var lockId, out var data, out var sessionTimeout))
             {
                 return;
             }
 
             if (data == null)
+            {
+                return;
+            }
+
+            if (expiration > TimeSpan.FromSeconds(1))
             {
                 return;
             }

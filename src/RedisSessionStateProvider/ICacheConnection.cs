@@ -19,5 +19,6 @@ namespace Microsoft.Web.Redis
         void TryRemoveAndReleaseLock(object lockId);
         void TryUpdateAndReleaseLock(object lockId, ISessionStateItemCollection data, int sessionTimeout);
         TimeSpan GetLockAge(object lockId);
+        TimeSpan GetRemainingExpiration();
     }
 }

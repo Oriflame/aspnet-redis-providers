@@ -20,5 +20,6 @@ namespace Microsoft.Web.Redis
         byte[] Get(string key);
         void Remove(string key);
         byte[] GetOutputCacheDataFromResult(object rowDataFromRedis);
+        TimeSpan? GetRemainingExpiration(string key);
     }
 }

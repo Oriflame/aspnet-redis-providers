@@ -35,9 +35,14 @@ namespace Microsoft.Web.Redis.FunctionalTests
 
         private class RedisSessionStateProviderForTest : Oriflame.Web.Redis.RedisSessionStateProvider
         {
-            protected override TimeSpan ToMinutes(int timeout)
+            internal override TimeSpan FromMinutes(int minutes)
             {
-                return TimeSpan.FromSeconds(timeout);
+                return TimeSpan.FromSeconds(minutes); // HACK for tests so that we do not have to design test times in minutes
+            }
+
+            internal override int FromMinutesToSeconds(int minutes)
+            {
+                return minutes; // HACK for tests so that we do not have to design test times in minutes
             }
         }
 
@@ -330,6 +335,10 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 ssp.SetItemExpireCallback((id, item) => { itemFromSessionEnd = item; });
 
                 await ssp.CreateUninitializedItemAsync(FakeHttpContext, sessionId, (int)RedisSessionStateProvider.configuration.SessionTimeout.TotalSeconds, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                // wait for session to expire
+                await Task.Delay(RedisSessionStateProvider.configuration.SessionTimeout)
                     .ConfigureAwait(false);
 
                 // assert
