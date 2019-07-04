@@ -164,7 +164,7 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 // Inserting data into redis server that expires after 1 second
                 ChangeTrackingSessionStateItemCollection data = new ChangeTrackingSessionStateItemCollection(new RedisUtility(pc));
                 data["key"] = "value";
-                redisConn.Set(data, 1);
+                redisConn.Set(data, -90); // faking TTL to expire as early as possible
 
                 // Wait for 2 seconds so that data will expire
                 System.Threading.Thread.Sleep(1100);
@@ -723,8 +723,8 @@ namespace Microsoft.Web.Redis.FunctionalTests
                 Assert.Equal(2, dataFromRedis.Count);
 
                 // Update expiry time to only 1 sec and than verify that.
-                redisConn.TryUpdateAndReleaseLock(lockId, dataFromRedis, 1);
-                
+                redisConn.TryUpdateAndReleaseLock(lockId, dataFromRedis, -90); // faking TTL to expire as early as possible
+
                 // Wait for 1.1 seconds so that data will expire
                 System.Threading.Thread.Sleep(1100);
 

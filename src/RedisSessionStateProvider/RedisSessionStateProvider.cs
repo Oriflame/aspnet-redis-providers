@@ -127,7 +127,7 @@ namespace Microsoft.Web.Redis
                 int sessionTimeoutInSeconds;
                 if (context != null && context.Session != null)
                 {
-                    sessionTimeoutInSeconds = context.Session.Timeout * FROM_MIN_TO_SEC;
+                    sessionTimeoutInSeconds = FromMinutesToSeconds(context.Session.Timeout);
                 }
                 else
                 {
@@ -175,7 +175,7 @@ namespace Microsoft.Web.Redis
                     GetAccessToStore(id);
                     OnCreateUninitializedItemAsync(sessionData);
                     // Converting timeout from min to sec
-                    cache.Set(sessionData, (timeout * FROM_MIN_TO_SEC));
+                    cache.Set(sessionData, FromMinutesToSeconds(timeout));
                 }
             }
             catch (Exception e)
@@ -359,7 +359,7 @@ namespace Microsoft.Web.Redis
                 int sessionTimeoutInSeconds;
                 if (context != null && context.Session != null)
                 {
-                    sessionTimeoutInSeconds = context.Session.Timeout * FROM_MIN_TO_SEC;
+                    sessionTimeoutInSeconds = FromMinutesToSeconds(context.Session.Timeout);
                 }
                 else
                 {
@@ -416,7 +416,7 @@ namespace Microsoft.Web.Redis
                         }
 
                         // Converting timout from min to sec
-                        cache.Set(sessionItems, (item.Timeout * FROM_MIN_TO_SEC));
+                        cache.Set(sessionItems, FromMinutesToSeconds(item.Timeout));
                         LogUtility.LogInfo("SetAndReleaseItemExclusive => Session Id: {0}, Session provider object: {1} => created new item in session.", id, this.GetHashCode());
                     } // If update if lock matches
                     else
@@ -428,7 +428,7 @@ namespace Microsoft.Web.Redis
                                 item.Items.Remove("SessionStateActions");
                             }
                             // Converting timout from min to sec
-                            cache.TryUpdateAndReleaseLock(lockId, item.Items, (item.Timeout * FROM_MIN_TO_SEC));
+                            cache.TryUpdateAndReleaseLock(lockId, item.Items, FromMinutesToSeconds(item.Timeout));
                             LogUtility.LogInfo("SetAndReleaseItemExclusive => Session Id: {0}, Session provider object: {1} => updated item in session, Lock ID: {2}.", id, this.GetHashCode(), lockId);
                         }
                     }
@@ -444,6 +444,11 @@ namespace Microsoft.Web.Redis
                 }
             }
             await Task.FromResult(0);
+        }
+
+        internal virtual int FromMinutesToSeconds(int minutes)
+        {
+            return minutes * FROM_MIN_TO_SEC;
         }
     }
 }

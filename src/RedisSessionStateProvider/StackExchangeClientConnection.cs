@@ -68,7 +68,7 @@ namespace Microsoft.Web.Redis
             return RetryLogic(() => RealConnection.ScriptEvaluate(script, redisKeyArgs, redisValueArgs));
         }
 
-        private object OperationExecutor(Func<object> redisOperation)
+        private T OperationExecutor<T>(Func<T> redisOperation)
         {
             try
             {
@@ -99,7 +99,7 @@ namespace Microsoft.Web.Redis
         /// <summary>
         /// If retry timout is provide than we will retry first time after 20 ms and after that every 1 sec till retry timout is expired or we get value.
         /// </summary>
-        private object RetryLogic(Func<object> redisOperation)
+        private T RetryLogic<T>(Func<T> redisOperation)
         {
             int timeToSleepBeforeRetryInMiliseconds = 20;
             DateTime startTime = DateTime.Now;
@@ -223,6 +223,11 @@ namespace Microsoft.Web.Redis
         {
             RedisResult rowDataAsRedisResult = (RedisResult)rowDataFromRedis;
             return (byte[]) rowDataAsRedisResult;
+        }
+
+        public TimeSpan? GetRemainingExpiration(string key)
+        {
+            return OperationExecutor(() => RealConnection.KeyTimeToLive(key));
         }
     }
 }
