@@ -116,20 +116,20 @@ namespace Oriflame.Web.Redis
 
         public override Task SetAndReleaseItemExclusiveAsync(HttpContextBase context, string id, SessionStateStoreData item, object lockId, bool newItem, CancellationToken cancellationToken)
         {
-            UpdateLocalCache(context.Session.Timeout, id);
+            UpdateLocalCacheIfSessionExists(context.Session, id);
             SetVersion(item.Items);
             return base.SetAndReleaseItemExclusiveAsync(context, id, item, lockId, newItem, cancellationToken);
         }
 
         public override Task ReleaseItemExclusiveAsync(HttpContextBase context, string id, object lockId, CancellationToken cancellationToken)
         {
-            UpdateLocalCache(context.Session.Timeout, id); // TODO maybe not call, verify
+            UpdateLocalCacheIfSessionExists(context.Session, id); // TODO maybe not call, verify
             return base.ReleaseItemExclusiveAsync(context, id, lockId, cancellationToken);
         }
 
         public override Task ResetItemTimeoutAsync(HttpContextBase context, string id, CancellationToken cancellationToken)
         {
-            UpdateLocalCache(context.Session.Timeout, id);
+            UpdateLocalCacheIfSessionExists(context.Session, id);
             return base.ResetItemTimeoutAsync(context, id, cancellationToken);
         }
 
@@ -150,6 +150,17 @@ namespace Oriflame.Web.Redis
         {
             return TimeSpan.FromMinutes(minutes);
         }
+
+        private void UpdateLocalCacheIfSessionExists(HttpSessionStateBase session, string id)
+        {
+            if (session == null)
+            {
+                return;
+            }
+
+            UpdateLocalCache(session.Timeout, id);
+        }
+
 
         private void UpdateLocalCache(int timeout, string id)
         {
