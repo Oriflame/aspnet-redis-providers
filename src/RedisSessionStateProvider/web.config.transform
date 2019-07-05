@@ -26,7 +26,7 @@
             redisSerializerType = "<Assembly qualified class name that implements Microsoft.Web.Redis.ISerializer>" [String]
           />
         -->
-        <add name="MySessionStateStore" type="Microsoft.Web.Redis.RedisSessionStateProvider"
+        <add name="MySessionStateStore" type="Oriflame.Web.Redis.RedisSessionStateProvider"
              host=""
              accessKey=""
              ssl="true" />
