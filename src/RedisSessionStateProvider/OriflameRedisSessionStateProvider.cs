@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.SessionState;
 using Microsoft.AspNet.SessionState;
+using Microsoft.Web.Redis;
 
 namespace Oriflame.Web.Redis
 {
@@ -116,20 +118,20 @@ namespace Oriflame.Web.Redis
 
         public override Task SetAndReleaseItemExclusiveAsync(HttpContextBase context, string id, SessionStateStoreData item, object lockId, bool newItem, CancellationToken cancellationToken)
         {
-            UpdateLocalCacheIfSessionExists(context.Session, id);
-            SetVersion(item.Items);
+            UpdateLocalCacheIfSessionExists(context?.Session, id);
+            SetVersion(item?.Items);
             return base.SetAndReleaseItemExclusiveAsync(context, id, item, lockId, newItem, cancellationToken);
         }
 
         public override Task ReleaseItemExclusiveAsync(HttpContextBase context, string id, object lockId, CancellationToken cancellationToken)
         {
-            UpdateLocalCacheIfSessionExists(context.Session, id); // TODO maybe not call, verify
+            UpdateLocalCacheIfSessionExists(context?.Session, id);
             return base.ReleaseItemExclusiveAsync(context, id, lockId, cancellationToken);
         }
 
         public override Task ResetItemTimeoutAsync(HttpContextBase context, string id, CancellationToken cancellationToken)
         {
-            UpdateLocalCacheIfSessionExists(context.Session, id);
+            UpdateLocalCacheIfSessionExists(context?.Session, id);
             return base.ResetItemTimeoutAsync(context, id, cancellationToken);
         }
 
@@ -175,43 +177,55 @@ namespace Oriflame.Web.Redis
 
         private void OnSessionExpired(CacheEntryRemovedArguments arguments)
         {
-            if (expireCallback == null)
+            try
             {
-                return;
-            }
+                if (expireCallback == null)
+                {
+                    return;
+                }
 
-            if (arguments.RemovedReason != CacheEntryRemovedReason.Expired
-                && arguments.RemovedReason != CacheEntryRemovedReason.CacheSpecificEviction)
+                if (arguments.RemovedReason != CacheEntryRemovedReason.Expired
+                    && arguments.RemovedReason != CacheEntryRemovedReason.CacheSpecificEviction)
+                {
+                    return;
+                }
+
+                var id = arguments.CacheItem.Key;
+                GetAccessToStore(id);
+                var requestTimeout = configuration.RequestTimeout.TotalSeconds;
+                var expiration = cache.GetRemainingExpiration();
+                if (expiration > TimeSpan.FromSeconds(1))
+                {
+                    return;
+                }
+
+                if (!cache.TryTakeWriteLockAndGetData(DateTime.Now, (int) requestTimeout, out var lockId, out var data, out var sessionTimeout))
+                {
+                    // if we do not obtain a lock then we can return immediately
+                    return;
+                }
+
+                // data and a LOCK must be immediately released so that
+                // requests with same session id are not blocked
+                // (should not happen regularly because session should be expired already from client point of view)
+                cache.TryRemoveAndReleaseLock(lockId);
+
+                if (data == null)
+                {
+                    return;
+                }
+
+                var item = new SessionStateStoreData(data, new HttpStaticObjectsCollection(), sessionTimeout);
+
+                // Expire callback is called intentionally AFTER removing session from Redis
+                // so that other servers potentially waiting for session lock
+                // are not forced to wait until expireCallback is finished
+                expireCallback(id, item);
+            }
+            catch (Exception ex)
             {
-                return;
+                LogUtility.LogError("Failed OnSessionExpired: {0}", ex);
             }
-
-            var id = arguments.CacheItem.Key;
-            GetAccessToStore(id);
-            var requestTimeout = configuration.RequestTimeout.TotalSeconds;
-            var expiration = cache.GetRemainingExpiration();
-            if (!cache.TryTakeWriteLockAndGetData(DateTime.Now, (int) requestTimeout, out var lockId, out var data, out var sessionTimeout))
-            {
-                return;
-            }
-
-            if (data == null)
-            {
-                return;
-            }
-
-            if (expiration > TimeSpan.FromSeconds(1))
-            {
-                return;
-            }
-
-            var item = new SessionStateStoreData(data, new HttpStaticObjectsCollection(), sessionTimeout);
-            cache.TryRemoveAndReleaseLock(lockId);
-
-            // Expire callback is called intentionally AFTER removing session from Redis
-            // so that other servers potentially waiting for session lock
-            // are not forced to wait until expireCallback is finished
-            expireCallback(id, item);
         }
 
         private Task<GetItemResult> SanitizeSessionByVersion(
